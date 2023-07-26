@@ -5,9 +5,6 @@ import less from "gulp-less";
 import zip from "gulp-zip";
 import jsonEditor from "gulp-json-editor";
 
-const ENVIROMENT_VARIABLE_VERSION = "MODULE_VERSION";
-const DEFAULT_VERSION = "1.0.0";
-
 gulp.task("clean", function (cb) {
     deleteSync(["dist/**", "!dist", "module.zip"]);
     cb();
@@ -37,14 +34,25 @@ gulp.task("copyAssets", function () {
 });
 
 gulp.task("prepareManifest", function () {
-    let moduleVersion = process.env[ENVIROMENT_VARIABLE_VERSION];
-    if (!moduleVersion) {
-        moduleVersion = DEFAULT_VERSION;
+    const allowedEnviromentVariables = [
+        "version",
+        "url",
+        "manifest",
+        "download",
+        "changelog",
+        "readme",
+        "license",
+    ];
+    let changesObject = {};
+    for (const envVariable of allowedEnviromentVariables) {
+        if (process.env[envVariable]) {
+            changesObject[envVariable] = process.env[envVariable];
+        }
     }
 
     return gulp
         .src(["src/module.json"])
-        .pipe(jsonEditor({ version: moduleVersion }))
+        .pipe(jsonEditor(changesObject))
         .pipe(gulp.dest("dist"));
 });
 
